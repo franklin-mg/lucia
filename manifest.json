@@ -1,31 +1,45 @@
+"short_name": "Lucia Explora",
+"description": "Juegos educativos de letras, figuras y frutas para Lucia.",
+"start_url": "index.html",
+"display": "standalone",
+"orientation": "portrait",
+"background_color": "#1a1a2e",
+"theme_color": "#00bcd4",
+"icons": [
 {
-  "name": "RainLearn - Lucia Explora",
-  "short_name": "Lucia Explora",
-  "description": "Juegos educativos de letras, figuras y frutas para Lucia.",
-  "start_url": "index.html",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#1a1a2e",
-  "theme_color": "#00bcd4",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "lucia_portada.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ],
-  "id": "lucia"
+"src": "icons/icon-192.png",
+"sizes": "192x192",
+"type": "image/png",
+"purpose": "any"
+},
+{
+"src": "img/lucia_portada.png",
+"sizes": "512x512",
+"type": "image/png",
+"purpose": "any"
+},
+{
+"src": "icons/icon-512.png",
+"sizes": "512x512",
+"type": "image/png",
+"purpose": "any"
+}
+],
+"screenshots": [
+{
+"src": "img/screenshot1.png",
+"sizes": "610x1356",
+"type": "image/png",
+"form_factor": "narrow",
+"label": "Menú principal de Lucia Explora"
+},
+{
+"src": "img/screenshot2.png",
+"sizes": "610x1356",
+"type": "image/png",
+"form_factor": "narrow",
+"label": "Juego de retos y figuras"
+}
+],
+"id": "lucia"
 }
