@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RainLearn - Lucia</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#673AB7">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <!-- Importación de fuente extra bold para máxima legibilidad -->
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Rubik:wght@900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #1a1a2e;
+            --text-light: #ffffff;
+            --accent-purple: #9c27b0;
+            --accent-cyan: #00bcd4;
+            --accent-amber: #ffc107;
+            --accent-success: #4caf50;
+            
+            --gradient-cards: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --gradient-letters: linear-gradient(135deg, #ff00cc, #3333ff);
+            --gradient-shapes: linear-gradient(135deg, #00f2fe, #4facfe);
+            --gradient-pairs: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            
+            --font-bold: 'Archivo Black', sans-serif;
+            --font-ui: 'Rubik', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: var(--font-ui);
+            background-color: var(--bg-main);
+            overflow: hidden;
+            color: var(--text-light);
+        }
+
+        header {
+            height: 60px;
+            background: #0f3460;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            flex-shrink: 0;
+            border-bottom: 4px solid var(--accent-cyan);
+        }
+
+        .header-left { 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-bold); 
+            font-size: 1.1rem; 
+            color: var(--accent-cyan); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+
+        .header-right { font-family: var(--font-bold); font-size: 1.1rem; color: var(--accent-amber); }
+
+        #game-area {
+            flex: 1;
+            position: relative;
+            background: #16213e;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- MENÚ PRINCIPAL --- */
+        #menu-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-main);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .main-cover {
+            max-width: 250px;
+            width: 65%;
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(0, 188, 212, 0.4));
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .menu-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .mode-btn {
+            width: 100%;
+            padding: 20px 15px;
+            border: none;
+            border-radius: 20px;
+            font-family: var(--font-bold);
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .mode-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+
+        /* --- MODALIDAD: MEMORIA --- */
+        #memory-game {
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 6px;
+            padding: 8px;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            box-sizing: border-box;
+            justify-items: center;
+            align-items: center;
+        }
+
+        .memory-card {
+            width: 95%;
+            height: 98%;
+            background: var(--gradient-cards);
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            transform-style: preserve-3d;
+            border: 3px solid rgba(255,255,255,0.1);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .card-back { background: var(--gradient-cards); z-index: 2; }
+        .card-front {
+            background: #ffffff;
+            color: #1a1a2e;
+            transform: rotateY(180deg);
+            font-family: var(--font-bold);
+            font-size: clamp(3.5rem, 18vw, 7rem);
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .memory-card.matched .card-front { background: var(--accent-amber); color: #000000; border: 4px solid #ffffff; }
+        .memory-card.matched { box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); pointer-events: none; transform: rotateY(180deg) scale(0.92); }
+
+        /* --- MODALIDAD: FIGURAS --- */
+        #shapes-game { display: none; flex-direction: column; height: 100%; width: 100%; background: #16213e; }
+        #rain-container { flex: 1; position: relative; overflow: hidden; background: #0f3460; }
+        
+        #shapes-targets {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            padding: 15px;
+            background: #1a1a2e;
+            border-top: 4px solid var(--accent-cyan);
+            justify-items: center;
+        }
+        
+        .shape-slot {
+            width: 70%;
+            aspect-ratio: 1/1;
+            border: 3px solid #0f3460;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #16213e;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        
+        .shape-slot.active-target { opacity: 1; border-color: var(--accent-amber); box-shadow: 0 0 15px var(--accent-amber); transform: scale(1.1); }
+        .shape-slot.completed { background: var(--accent-success) !important; opacity: 1; border-color: white !important; transform: scale(1); }
+
+        .falling-shape {
+            position: absolute;
+            cursor: pointer;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+            transition: transform 0.1s;
+        }
+
+        /* --- MODALIDAD: FIESTA DE FRUTAS --- */
+        #pairs-game {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            overflow: hidden;
+        }
+
+        .fruit-card {
+            position: absolute;
+            width: 85px;
+            height: 85px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+            border: 4px solid var(--accent-cyan);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, opacity 0.3s;
+            z-index: 10;
+        }
+
+        /* --- UI GENERAL --- */
+        #score-tag { position: absolute; top: 12px; right: 15px; background: var(--accent-cyan); color: #000; padding: 6px 15px; border-radius: 12px; font-family: var(--font-bold); z-index: 200; box-shadow: 0 4px 0 #00838f; font-size: 0.9rem; }
+        #timer-tag { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: #ff5252; color: white; padding: 6px 15px; border-radius: 12px; font-family: var(--font-bold); z-index: 200; display: none; font-size: 0.9rem; }
+        #exit-btn { position: absolute; top: 12px; left: 15px; background: #16213e; border: 2px solid var(--accent-cyan); padding: 6px 15px; border-radius: 12px; font-family: var(--font-bold); z-index: 200; color: var(--accent-cyan); cursor: pointer; font-size: 0.8rem; }
+
+        #celebration-overlay, #game-over-overlay {
+            position: absolute; inset: 0; background: rgba(26, 26, 46, 0.95); z-index: 5000;
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+        }
+        .names-highlight { font-family: var(--font-bold); color: var(--accent-amber); display: block; font-size: 2.5rem; margin: 15px 0; text-shadow: 0 0 10px rgba(255,193,7,0.5); }
+        .status-msg { font-family: var(--font-ui); font-size: 1.8rem; font-weight: 900; color: white; }
+        .retry-btn { background: var(--accent-cyan); color: #000; border: none; padding: 18px 45px; border-radius: 30px; font-family: var(--font-bold); font-size: 1.3rem; cursor: pointer; margin-top: 25px; }
+
+        footer { height: 40px; background: #0f3460; color: #536dfe; display: flex; align-items: center; justify-content: center; font-family: var(--font-bold); font-size: 0.75rem; border-top: 2px solid var(--accent-cyan); letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">LUCIA EXPLORA</div>
+    <div class="header-right">Gamers-FM</div>
+</header>
+
+<div id="game-area">
+    <div id="menu-overlay">
+        <!-- RUTA MODIFICADA PARA DIRECTORIO LOCAL -->
+        <img 
+            id="lucia-cover"
+            src="img/lucia_portada.png" 
+            alt="Lucia Portada" 
+            class="main-cover"
+            onerror="this.onerror=null; this.src='icons/icon-512.png';"
+        >
+        <div class="menu-content">
+            <button class="mode-btn" style="background: var(--gradient-letters)" onclick="startGame('memory')">RETO DE LETRAS</button>
+            <button class="mode-btn" style="background: var(--gradient-shapes)" onclick="startGame('shapes')">LLUVIA DE FIGURAS</button>
+            <button class="mode-btn" style="background: var(--gradient-pairs)" onclick="startGame('pairs')">FIESTA DE FRUTAS</button>
+        </div>
+    </div>
+
+    <button id="exit-btn" style="display:none" onclick="stopGame()">VOLVER</button>
+    <div id="timer-tag">02:00</div>
+    <div id="score-tag" style="display:none">PUNTOS: 0</div>
+
+    <div id="memory-game"></div>
+    <div id="shapes-game">
+        <div id="rain-container"></div>
+        <div id="shapes-targets"></div>
+    </div>
+    <div id="pairs-game"></div>
+
+    <div id="celebration-overlay">
+        <div class="status-msg">¡LO LOGRASTE!</div>
+        <span class="names-highlight">LUCIA CAMPEONA</span>
+        <div style="font-size: 5rem;">🏆⭐</div>
+        <canvas id="confetti-canvas" style="position:absolute; inset:0; pointer-events:none; z-index: 5001;"></canvas>
+    </div>
+
+    <div id="game-over-overlay">
+        <div class="status-msg" style="color: #ff5252;">¡TIEMPO AGOTADO!</div>
+        <div style="font-size: 5rem; margin: 20px;">⌛👾</div>
+        <button class="retry-btn" onclick="stopGame()">REINTENTAR</button>
+    </div>
+</div>
+
+<footer>tecnotips © - 2026, Tecnologia con proposito</footer>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registrado'))
+                .catch(err => console.log('Error SW', err));
+        });
+    }
+
+    const TARGET_COUNT = 5;
+    const FRUIT_LIST = ['🍎', '🍌', '🍇', '🍓', '🍊', '🍉', '🍍', '🍒', '🥝', '🍐', '🍋', '🍑', '🥑', '🥭', '🥥'];
+    const ALPHABET = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+    const GAME_TIME_LIMIT = 120;
+    
+    let state = { playing: false, mode: '', score: 0, timeLeft: GAME_TIME_LIMIT };
+    let gameLoopState = { lastSpawn: 0, items: [] };
+    let animationId = null;
+    let timerInterval = null;
+    let pairsState = { selected: null, matches: 0 };
+    let memoryState = { flipped: [], matches: 0, lock: false };
+    let shapeProgress = {};
+    let currentShapeTarget = null;
+    let shapeCycleInterval = null;
+
+    const shapesData = [
+        { id: 'circle', color: '#00e5ff', path: '<circle cx="50" cy="50" r="40" />' },
+        { id: 'square', color: '#ff4081', path: '<rect x="15" y="15" width="70" height="70" />' },
+        { id: 'triangle', color: '#76ff03', path: '<polygon points="50,15 90,85 10,85" />' },
+        { id: 'star', color: '#ffff00', path: '<polygon points="50,10 61,40 95,40 67,60 78,90 50,70 22,90 33,60 5,40 39,40" />' },
+        { id: 'heart', color: '#ff1744', path: '<path d="M50,85 L42,78 C25,62 10,48 10,32 C10,20 20,10 32,10 C39,10 46,14 50,20 C54,14 61,10 68,10 C80,10 90,20 90,32 C90,48 75,62 58,78 L50,85 Z" />' }
+    ];
+
+    function startGame(mode) {
+        state.playing = true; state.mode = mode; state.score = 0; state.timeLeft = GAME_TIME_LIMIT;
+        document.getElementById('menu-overlay').style.display = 'none';
+        document.getElementById('exit-btn').style.display = 'block';
+        document.getElementById('score-tag').style.display = 'block';
+        document.getElementById('timer-tag').style.display = 'block';
+        hideAllGames(); updateScore(); updateTimerDisplay();
+
+        if (mode === 'shapes') initShapes();
+        if (mode === 'pairs') initPairs();
+        if (mode === 'memory') initMemory();
+
+        if (mode === 'shapes') {
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(gameLoop);
+            startShapeCycle();
+        }
+        startTimer();
+    }
+
+    function hideAllGames() {
+        ['memory-game', 'shapes-game', 'pairs-game', 'celebration-overlay', 'game-over-overlay'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        if (shapeCycleInterval) clearInterval(shapeCycleInterval);
+    }
+
+    function initMemory() {
+        const container = document.getElementById('memory-game');
+        container.style.display = 'grid'; container.innerHTML = '';
+        memoryState = { flipped: [], matches: 0, lock: false };
+        const selectedLetters = [...ALPHABET].sort(() => Math.random() - 0.5).slice(0, 8);
+        const deck = [...selectedLetters, ...selectedLetters].sort(() => Math.random() - 0.5);
+        deck.forEach((letter) => {
+            const card = document.createElement('div');
+            card.className = 'memory-card'; card.dataset.letter = letter;
+            card.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front">${letter}</div>`;
+            card.onclick = () => handleMemoryClick(card);
+            container.appendChild(card);
+        });
+    }
+
+    function handleMemoryClick(card) {
+        if (memoryState.lock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+        card.classList.add('flipped'); memoryState.flipped.push(card);
+        if (memoryState.flipped.length === 2) {
+            memoryState.lock = true;
+            const [c1, c2] = memoryState.flipped;
+            if (c1.dataset.letter === c2.dataset.letter) {
+                setTimeout(() => {
+                    c1.classList.add('matched'); c2.classList.add('matched');
+                    state.score += 50; updateScore(); memoryState.matches++; 
+                    memoryState.flipped = []; memoryState.lock = false;
+                    if (memoryState.matches === 8) celebrate();
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    c1.classList.remove('flipped'); c2.classList.remove('flipped');
+                    memoryState.flipped = []; memoryState.lock = false;
+                }, 1000);
+            }
+        }
+    }
+
+    function initShapes() {
+        const game = document.getElementById('shapes-game');
+        const targets = document.getElementById('shapes-targets');
+        game.style.display = 'flex'; targets.innerHTML = '';
+        document.getElementById('rain-container').innerHTML = '';
+        gameLoopState.items = []; shapeProgress = {};
+        shapesData.forEach(shape => {
+            shapeProgress[shape.id] = 0;
+            const slot = document.createElement('div');
+            slot.className = 'shape-slot'; slot.id = `slot-${shape.id}`;
+            slot.innerHTML = `<svg viewBox="0 0 100 100" style="fill:${shape.color}; width:60%; height:60%;">${shape.path}</svg>`;
+            targets.appendChild(slot);
+        });
+    }
+
+    function startShapeCycle() {
+        cycleTarget();
+        shapeCycleInterval = setInterval(cycleTarget, 3000);
+    }
+
+    function cycleTarget() {
+        if (!state.playing || state.mode !== 'shapes') return;
+        if (currentShapeTarget) document.getElementById(`slot-${currentShapeTarget.id}`)?.classList.remove('active-target');
+        const available = shapesData.filter(s => shapeProgress[s.id] < TARGET_COUNT);
+        if (available.length === 0) { celebrate(); return; }
+        currentShapeTarget = available[Math.floor(Math.random() * available.length)];
+        const targetSlot = document.getElementById(`slot-${currentShapeTarget.id}`);
+        if (targetSlot) targetSlot.classList.add('active-target');
+    }
+
+    function spawnShape() {
+        const container = document.getElementById('rain-container');
+        if (!container) return;
+        const shape = shapesData[Math.floor(Math.random() * shapesData.length)];
+        const el = document.createElement('div'); el.className = 'falling-shape';
+        const size = 85; 
+        el.style.cssText = `width:${size}px; height:${size}px; top:-100px; left:${Math.random() * (container.clientWidth - size)}px;`;
+        el.innerHTML = `<svg viewBox="0 0 100 100" style="fill:${shape.color}">${shape.path}</svg>`;
+        const item = { el, y: -100, id: shape.id, dying: false };
+        el.onpointerdown = () => {
+            if (!state.playing || item.id !== currentShapeTarget?.id) return;
+            item.dying = true; el.style.transform = "scale(0)";
+            shapeProgress[item.id]++; state.score += 20; updateScore();
+            if (shapeProgress[item.id] >= TARGET_COUNT) {
+                document.getElementById(`slot-${item.id}`).classList.add('completed');
+                cycleTarget();
+            }
+        };
+        container.appendChild(el); gameLoopState.items.push(item);
+    }
+
+    function initPairs() {
+        const container = document.getElementById('pairs-game');
+        container.style.display = 'block'; container.innerHTML = '';
+        pairsState = { selected: null, matches: 0 };
+        const deck = [...FRUIT_LIST, ...FRUIT_LIST].sort(() => Math.random() - 0.5);
+        deck.forEach((fruit) => {
+            const card = document.createElement('div');
+            card.className = 'fruit-card'; card.innerText = fruit; card.dataset.fruit = fruit;
+            const x = Math.random() * (window.innerWidth - 100) + 10;
+            const y = Math.random() * (window.innerHeight - 250) + 100;
+            const rot = (Math.random() * 40) - 20;
+            card.style.left = `${x}px`; card.style.top = `${y}px`; card.style.transform = `rotate(${rot}deg)`;
+            card.onpointerdown = () => {
+                if (!state.playing || card.style.opacity === "0") return;
+                card.style.borderColor = "var(--accent-amber)"; card.style.zIndex = "100";
+                if (!pairsState.selected) {
+                    pairsState.selected = card;
+                } else {
+                    if (pairsState.selected === card) {
+                        card.style.borderColor = "var(--accent-cyan)"; pairsState.selected = null; return;
+                    }
+                    if (pairsState.selected.dataset.fruit === card.dataset.fruit) {
+                        const f = pairsState.selected; const s = card;
+                        setTimeout(() => {
+                            f.style.opacity = "0"; s.style.opacity = "0"; f.style.pointerEvents = "none"; s.style.pointerEvents = "none";
+                            state.score += 30; updateScore(); pairsState.matches++; if (pairsState.matches === 15) celebrate();
+                        }, 300);
+                        pairsState.selected = null;
+                    } else {
+                        const f = pairsState.selected;
+                        setTimeout(() => { f.style.borderColor = "var(--accent-cyan)"; card.style.borderColor = "var(--accent-cyan)"; f.style.zIndex = "10"; }, 500);
+                        pairsState.selected = null;
+                    }
+                }
+            };
+            container.appendChild(card);
+        });
+    }
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (!state.playing) return;
+            state.timeLeft--; updateTimerDisplay();
+            if (state.timeLeft <= 0) handleGameOver();
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(state.timeLeft / 60); const s = state.timeLeft % 60;
+        document.getElementById('timer-tag').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function handleGameOver() {
+        state.playing = false; clearInterval(timerInterval);
+        document.getElementById('game-over-overlay').style.display = 'flex';
+    }
+
+    function gameLoop(time) {
+        if (!state.playing || state.mode !== 'shapes') return;
+        if (time - gameLoopState.lastSpawn > 1000) { spawnShape(); gameLoopState.lastSpawn = time; }
+        updateShapes();
+        animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function updateShapes() {
+        for (let i = gameLoopState.items.length - 1; i >= 0; i--) {
+            const it = gameLoopState.items[i];
+            if (!it.dying) {
+                it.y += 3; it.el.style.top = it.y + 'px';
+                if (it.y > window.innerHeight) { it.el.remove(); gameLoopState.items.splice(i, 1); }
+            } else { it.el.remove(); gameLoopState.items.splice(i, 1); }
+        }
+    }
+
+    function updateScore() { document.getElementById('score-tag').innerText = `PUNTOS: ${state.score}`; }
+
+    function stopGame() {
+        state.playing = false; clearInterval(timerInterval);
+        if (animationId) cancelAnimationFrame(animationId);
+        document.getElementById('menu-overlay').style.display = 'flex';
+        document.getElementById('exit-btn').style.display = 'none';
+        document.getElementById('score-tag').style.display = 'none';
+        document.getElementById('timer-tag').style.display = 'none';
+        hideAllGames();
+    }
+
+    function celebrate() {
+        state.playing = false; clearInterval(timerInterval);
+        document.getElementById('celebration-overlay').style.display = 'flex';
+        startConfetti();
+        setTimeout(stopGame, 5000);
+    }
+
+    function startConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const p = [];
+        for (let i = 0; i < 80; i++) p.push({ x: Math.random() * canvas.width, y: -10, c: `hsl(${Math.random() * 360}, 80%, 60%)`, s: Math.random() * 4 + 2 });
+        function draw() {
+            if (document.getElementById('celebration-overlay').style.display !== 'flex') return;
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            p.forEach(part => { part.y += part.s; ctx.fillStyle = part.c; ctx.fillRect(part.x, part.y, 10, 10); if (part.y > canvas.height) part.y = -10; });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>
